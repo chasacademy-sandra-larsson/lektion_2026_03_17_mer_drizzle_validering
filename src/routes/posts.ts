@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 import { Router } from 'express'
 import { db } from '../db'
 import { posts, users } from '../db/schema'
@@ -9,20 +9,40 @@ const router = Router()
 
 // GET /posts — publik, alla kan se alla inlägg
 router.get('/', async (req, res) => {
-  const allPosts = await db
-    .select({
-      id: posts.id,
-      title: posts.title,
-      content: posts.content,
-      author: {
-        id: users.id,
-        email: users.email,
-      },
-    })
-    .from(posts)
-    .leftJoin(users, eq(posts.userId, users.id))
 
-  res.json(allPosts)
+  try {
+
+  // Alternativ 1: Mer SQL-lik förfrågan
+  // const allPosts = await db
+  //   .select({
+  //     id: posts.id,
+  //     title: posts.title,
+  //     content: posts.content,
+  //     author: {
+  //       id: users.id,
+  //       email: users.email,
+  //     },
+  //   })
+  //   .from(posts)
+  //   .leftJoin(users, eq(posts.userId, users.id))
+
+  // Alternativ 2: Tydligare med findMany från Drizzle relations
+  const allPosts = await db.query.posts.findMany({
+    with: {
+        author: true
+    },
+    orderBy: [desc(posts.createdAt)] 
+  })
+
+  res.status(200).json(allPosts)
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({error: "Internal server error"})
+  }
+
+
+  
 })
 
 // POST /posts — skyddad, måste vara inloggad

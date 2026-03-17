@@ -1,0 +1,1 @@
+// Om man vill kan man lägga alla relationskoppling här istället för schema.ts

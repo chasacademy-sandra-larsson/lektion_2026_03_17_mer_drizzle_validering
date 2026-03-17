@@ -1,12 +1,20 @@
 import { integer, pgTable, primaryKey, serial, text, timestamp, varchar } from 'drizzle-orm/pg-core'
-
-// Schema är source of truth — drizzle-kit push syncar databasen härifrån
+import { relations } from "drizzle-orm"
+// Schema är source of truth — drizzle-kit push synckar databasen härifrån
 
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   email: text('email').notNull().unique(),
   password: text('password').notNull(),
 })
+
+// User relations
+// export const userRelations = relations(users, ({one, many}) => ({
+//   posts: many(posts),
+//   comments: many(comments),
+//   profile: one(profile),
+// }));
+
 
 export const posts = pgTable('posts', {
   id: serial('id').primaryKey(),
@@ -17,6 +25,13 @@ export const posts = pgTable('posts', {
     .notNull()
     .references(() => users.id),
 })
+
+// Post relations
+// export const postRelations = relations(posts, ({one, many}) => ({
+//     author: one(users, { fields: [posts.userId], references: [users.id]}),
+//     comments: many(comments),
+//     postCategories: many(postCategories)
+// }));
 
 export const comments = pgTable('comments', { 
      id: serial('id').primaryKey(),
@@ -30,6 +45,12 @@ export const comments = pgTable('comments', {
         .references(() => posts.id)
 })
 
+// Comment relations 
+// export const commentsRelations = relations(comments, ({one, many}) => ({
+//     author: one(users, { fields: [comments.userId], references: [users.id]}),
+//     posts: one(posts, { fields: [comments.postId], references: [posts.id]}),
+// }));
+
 export const profile = pgTable('profile', {
   id: serial('id').primaryKey(),
   avatar: varchar('avatar'),
@@ -41,10 +62,23 @@ export const profile = pgTable('profile', {
               .references(()=> users.id)
 })
 
+// Profile relations
+// export const profileRelations = relations(profile, ({one}) => ({
+//     author: one(users, { fields: [profile.userId], references: [users.id]}),
+// }));
+
+
 export const categories = pgTable('categories', {
   id: serial('id').primaryKey(),
   name: varchar('name').notNull(),
 })
+
+// Category relations
+// export const categoryRelations = relations(categories, ({many}) => ({
+//    postCategories: many(categories)
+// }));
+
+
 
 // Kopplingstabellen (junction table)
 export const postCategories = pgTable('post_categories', {
@@ -62,7 +96,44 @@ export const postCategories = pgTable('post_categories', {
   }));
    
 
+// Kopplingstabellens relations
+// export const postCategoryRelations = relations(postCategories, ({one}) => ({
+//    post: one(posts, { fields: [postCategories.postId], references: [posts.id]}),
+//    category: one(categories, { fields: [postCategories.categoryId], references: [categories.id]}),
+// }));
 
+// Den relation som har foreign key på userId i users tabellen måste ange fields och references
+
+export const userRelations = relations(users, ({ one, many }) => ({
+  posts: many(posts),
+  comments: many(comments),
+  profile: one(profile),
+}))
+
+export const postRelations = relations(posts, ({ one, many }) => ({
+  author: one(users, { fields: [posts.userId], references: [users.id] }),
+  comments: many(comments),
+  postCategories: many(postCategories), // many-to-many: via kopplingstabell
+}))
+
+export const categoryRelations = relations(categories, ({ many }) => ({
+  postCategories: many(postCategories), // many-to-many: samma kopplingstabell
+}))
+
+export const postCategoriesRelations = relations(postCategories, ({ one }) => ({
+  post: one(posts, { fields: [postCategories.postId], references: [posts.id] }),
+  category: one(categories, { fields: [postCategories.categoryId], references: [categories.id] }),
+}))
+
+
+export const commentRelations = relations(comments, ({ one }) => ({
+  author: one(users, { fields: [comments.userId], references: [users.id] }),
+  post: one(posts, { fields: [comments.postId], references: [posts.id] }),
+}))
+
+export const profileRelations = relations(profile, ({ one }) => ({
+  user: one(users, { fields: [profile.userId], references: [users.id] }),
+}))
 
 
 export type User = typeof users.$inferSelect
@@ -77,3 +148,7 @@ export type Category = typeof categories.$inferSelect
 export type NewCategory = typeof categories.$inferInsert
 export type PostCategory = typeof postCategories.$inferInsert
 export type NewPostCategory = typeof postCategories.$inferSelect
+
+
+
+

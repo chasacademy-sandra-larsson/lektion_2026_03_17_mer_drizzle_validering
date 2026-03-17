@@ -58,10 +58,18 @@ router.post('/signin', async (req, res) => {
     const { email, password } = req.body;
 
     // 2. Kolla att email finns i databasen 
-    const [ user ] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, email))
+    
+    // Alternativ 1: Mer SQL-lik förfrågan
+    // const [ user ] = await db
+    //     .select()
+    //     .from(users)
+    //     .where(eq(users.email, email))
+
+    // Alternativ 2: Drizzle Relatioons
+
+    const user = await db.query.users.findFirst({
+        where: eq(users.email, email),
+    })
 
     // Användaren är inte authentiserrad 
     if(!user) {
