@@ -16,23 +16,7 @@ app.use(cors({
 }),);
 
 
-// // Custom middleware 
-// const myMiddleware = (req: Request, res: Response, next: NextFunction) => {
-//   console.log("Hi from middleware!! ");
-//   next();
-// }
 
-
-// // Routes
-// app.get("/hello", myMiddleware, (req, res) => {
-//   res.send("hello");
-// })
-
-// app.post("/hello", (req, res) => {
-//   res.json({"message": "hello from post"});
-// })
-
-// API-endpoints
 
 // ┌────────┬──────────────┬──────────────────────┬──────────────────────┐
 // │ Metod  │    Route     │         Auth         │     Beskrivning      │
